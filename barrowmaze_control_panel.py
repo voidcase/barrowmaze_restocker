@@ -5,20 +5,33 @@ import typing as T
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+import codecs
 
-# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring,missing-module-docstring
+
+def rot13(text: str) -> str:
+    return codecs.encode(text, 'rot13')
 
 
 class Table:
 
     def __init__(self, path: str):
         self.path = path
-        content = list(csv.reader(open(path, 'r')))
-        self.headers = content[0]
+        content = list(csv.reader(open(path, 'r'), delimiter=';'))
+        self.headers = [rot13(h) for h in content[0]]
         self.rows: T.List[T.Dict[str, str]] = [
-            dict(zip(self.headers, row))
+            self.prepare_row(dict(zip(self.headers, row)))
             for row in content[1:]
         ]
+
+    def prepare_row(self, row: dict) -> dict:
+        dst = row.copy()
+        for key in row:
+            if row[key] == '':
+                del dst[key]
+            if key == 'NEXT' and 'NEXT' in dst:
+                dst[key] = [rot13(tn) for tn in dst[key].split(' ')]
+        return dst
 
     def is_monster_table(self) -> bool:
         return 'HP' in self.headers
@@ -27,7 +40,7 @@ class Table:
         return 'NEXT' in self.headers
 
     def roll(self) -> dict:
-        idx = random.randint(0, len(self.rows))
+        idx = random.randint(0, len(self.rows)-1)
         return self.rows[idx]
 
 
@@ -35,7 +48,7 @@ class ControlPanel:
 
     def __init__(self):
         self.tables: T.Dict[Table] = dict()
-        self.tablepath = Path('./tables')
+        self.tablepath = Path('./tables/rot13')
         for path in self.tablepath.glob('*.csv'):
             self.tables[path.stem] = Table(str(path))
 
@@ -53,13 +66,32 @@ class ControlPanel:
         self.player_level.pack()
 
     def restock_room(self):
+        print('#############################')
         self.txt.configure(text=self.get_level_interval(['1-3','4-6','7-9']))
-        base = self.tables['base']
-        outcome = base.roll()
+        self.roll_traverse_table('base')
+
+    def roll_traverse_table(self, table_name: str):
+        if '_lvl' in table_name:
+            table_name = table_name.replace('_lvl', '_{}'.format(
+                self.get_level_interval(['1-3', '4-6', '7-9'])
+            ))
+        if table_name in self.tables:
+            table: Table = self.tables[table_name]
+            row = table.roll()
+            print(table_name, ':', row['NAME'])
+            if 'AMOUNT' in row:
+                print('Amount:', row['AMOUNT'])
+            if 'HP' in row:
+                print('HP:', row['HP'])
+            print('------------------------')
+            if 'NEXT' in row:
+                for nextname in row['NEXT']:
+                    self.roll_traverse_table(nextname)
+        else:
+            print(f'oi mate, cound not find a table called "{table_name}"')
 
     def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
         lvl = self.player_level.current() + 1
-        print('lvl:', lvl)
         for interval in intervals:
             match = re.match(r'([0-9]+)-([0-9]+)', interval)
             if match is None:
