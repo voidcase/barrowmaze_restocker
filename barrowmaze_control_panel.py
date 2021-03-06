@@ -2,14 +2,24 @@ import csv
 import random
 import re
 import typing as T
+from pathlib import Path
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 
-
+# pylint: disable=missing-class-docstring,missing-function-docstring
 
 class ControlPanel:
-    
+
     def __init__(self):
+        self.tables = dict()
+        
+        print(self.tablepath)
+        self.tablepath = Path('./tables')
+
+        for path in self.tablepath.glob('*.csv'):
+            reader = csv.reader(open(path, 'r'))
+            self.tables[str(path)] = None # FIXME
+
         self.root = tk.Tk()
         self.root.geometry('600x200')
         self.root.wm_title('Barrowmaze Control Panel')
@@ -21,10 +31,8 @@ class ControlPanel:
         self.generate_btn.pack()
 
         player_level_label = tk.Label(self.root, text='Player Level')
-        self.player_level = ttk.Combobox(self.root, values=[i for i in range(1, 20)])
+        self.player_level = ttk.Combobox(self.root, values=list(range(1, 20)))
         self.player_level.pack()
-
-        
 
     def restock_room(self):
         self.txt.configure(text=self.get_level_interval(['1-3','4-6','7-9']))
@@ -33,9 +41,9 @@ class ControlPanel:
         lvl = self.player_level.current() + 1
         print('lvl:', lvl)
         for interval in intervals:
-            m = re.match(r'([0-9]+)-([0-9]+)', interval)
-            from_lvl = int(m.group(1))
-            to_lvl = int(m.group(2))
+            match = re.match(r'([0-9]+)-([0-9]+)', interval)
+            from_lvl = int(match.group(1))
+            to_lvl = int(match.group(2))
             if from_lvl <= lvl <= to_lvl:
                 return interval
         return None
