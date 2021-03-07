@@ -53,10 +53,8 @@ class ControlPanel:
             self.tables[path.stem] = Table(str(path))
 
         self.root = tk.Tk()
-        self.root.geometry('600x200')
+        self.root.geometry('400x400')
         self.root.wm_title('Barrowmaze Control Panel')
-
-
 
         self.player_level = tk.Spinbox(from_=1, to=9)
         self.player_level.pack()
