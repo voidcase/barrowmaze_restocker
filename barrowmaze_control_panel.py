@@ -53,10 +53,10 @@ class ControlPanel:
             self.tables[path.stem] = Table(str(path))
 
         self.root = tk.Tk()
-        self.root.geometry('400x400')
+        self.root.geometry('450x400')
         self.root.wm_title('Barrowmaze Control Panel')
 
-        self.player_level = tk.Spinbox(from_=1, to=9)
+        self.player_level = tk.Spinbox(from_=1, to=10)
         self.player_level.pack()
 
         self.generate_btn = tk.Button(self.root, text='Restock room', command=self.restock_room)
@@ -73,7 +73,7 @@ class ControlPanel:
         ret = ''
         if '_lvl' in table_name:
             table_name = table_name.replace('_lvl', '_{}'.format(
-                self.get_level_interval(['1-3', '4-6', '7-9'])
+                self.get_level_interval(['1-3', '4-6', '7-10'])
             ))
         if table_name in self.tables:
             table: Table = self.tables[table_name]
@@ -88,7 +88,7 @@ class ControlPanel:
                 for nextname in row['NEXT']:
                     ret += self.roll_traverse_table(nextname)
         else:
-            ret += f'oi mate, cound not find a table called "{table_name}"'
+            ret += f'oi mate, cound not find a table called "{table_name}"\n'
         return ret
 
     def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
