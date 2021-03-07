@@ -56,21 +56,23 @@ class ControlPanel:
         self.root.geometry('600x200')
         self.root.wm_title('Barrowmaze Control Panel')
 
-        self.txt = tk.Label(self.root, text='Hej Max')
-        self.txt.pack()
 
-        self.generate_btn = tk.Button(self.root, text='Restock room', command=self.restock_room)
-        self.generate_btn.pack()
 
         self.player_level = ttk.Combobox(self.root, values=list(range(1, 20)))
         self.player_level.pack()
 
+        self.generate_btn = tk.Button(self.root, text='Restock room', command=self.restock_room)
+        self.generate_btn.pack()
+
+        self.output = tk.Label(self.root, text='hejmax')
+        self.output.pack()
+
     def restock_room(self):
-        print('#############################')
-        self.txt.configure(text=self.get_level_interval(['1-3','4-6','7-9']))
-        self.roll_traverse_table('base')
+        text = self.roll_traverse_table('base')
+        self.output.configure(text=text)
 
     def roll_traverse_table(self, table_name: str):
+        ret = ''
         if '_lvl' in table_name:
             table_name = table_name.replace('_lvl', '_{}'.format(
                 self.get_level_interval(['1-3', '4-6', '7-9'])
@@ -78,17 +80,18 @@ class ControlPanel:
         if table_name in self.tables:
             table: Table = self.tables[table_name]
             row = table.roll()
-            print(table_name, ':', row['NAME'])
+            ret += '{}: {}\n'.format(table_name, row['NAME'])
             if 'AMOUNT' in row:
-                print('Amount:', row['AMOUNT'])
+                ret += 'AMOUNT: {}\n'.format(row['AMOUNT'])
             if 'HP' in row:
-                print('HP:', row['HP'])
-            print('------------------------')
+                ret += 'HP: {}\n'.format(row['HP'])
+            ret += '-'*10 + '\n'
             if 'NEXT' in row:
                 for nextname in row['NEXT']:
-                    self.roll_traverse_table(nextname)
+                    ret += self.roll_traverse_table(nextname)
         else:
-            print(f'oi mate, cound not find a table called "{table_name}"')
+            ret += f'oi mate, cound not find a table called "{table_name}"'
+        return ret
 
     def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
         lvl = self.player_level.current() + 1
