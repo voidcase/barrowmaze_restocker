@@ -58,7 +58,7 @@ class ControlPanel:
 
 
 
-        self.player_level = ttk.Combobox(self.root, values=list(range(1, 20)))
+        self.player_level = tk.Spinbox(from_=1, to=9)
         self.player_level.pack()
 
         self.generate_btn = tk.Button(self.root, text='Restock room', command=self.restock_room)
@@ -94,7 +94,7 @@ class ControlPanel:
         return ret
 
     def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
-        lvl = self.player_level.current() + 1
+        lvl = int(self.player_level.get())
         for interval in intervals:
             match = re.match(r'([0-9]+)-([0-9]+)', interval)
             if match is None:
