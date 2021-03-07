@@ -112,10 +112,12 @@ class ControlPanel:
             table: Table = self.tables[table_name]
             row = table.roll()
             ret += '{}: {}\n'.format(table_name, row['NAME'])
+            amount = None
             if 'AMOUNT' in row:
                 amount = parse_roll(rot13(row['AMOUNT']))
                 ret += 'amount: {}\n'.format(amount or row['AMOUNT'])
             if 'HP' in row:
+                amount = amount or 1
                 ret += 'hp roll: {}\n'.format(row['HP'])
                 if amount is not None and parse_roll(rot13(row['HP'])) is not None:
                     hps = [str(parse_roll(rot13(row['HP']))) or '| Weird error, ask Isak |' for i in range(amount)]
