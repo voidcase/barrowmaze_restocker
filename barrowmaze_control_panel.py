@@ -53,10 +53,10 @@ class ControlPanel:
             self.tables[path.stem] = Table(str(path))
 
         self.root = tk.Tk()
-        self.root.geometry('450x400')
+        self.root.geometry('400x300')
         self.root.wm_title('Barrowmaze Control Panel')
         
-        self.control_frame = tk.Frame(self.root, relief=tk.RAISED, borderwidth=1)
+        self.control_frame = tk.Frame(self.root, relief=tk.RAISED, borderwidth=1, padx=2, pady=2)
         self.control_frame.pack(padx=5, pady=5, ipadx=2, fill=tk.X)
 
         self.player_level_label = tk.Label(self.control_frame, text='Party Level')
@@ -71,8 +71,16 @@ class ControlPanel:
         )
         self.generate_btn.pack(side=tk.RIGHT)
 
-        self.output = tk.Label(self.root, text='hejmax')
-        self.output.pack()
+        self.output = tk.Label(
+            self.root,
+            text='hejmax',
+            justify=tk.LEFT,
+            relief=tk.SUNKEN,
+            anchor=tk.NW,
+            padx=5,
+            pady=5,
+        )
+        self.output.pack(fill=tk.BOTH, expand=True, padx=5, pady=5, ipadx=5, ipady=5)
 
     def restock_room(self):
         text = self.roll_traverse_table('base')
@@ -92,12 +100,12 @@ class ControlPanel:
                 ret += 'AMOUNT: {}\n'.format(row['AMOUNT'])
             if 'HP' in row:
                 ret += 'HP: {}\n'.format(row['HP'])
-            ret += '-'*10 + '\n'
+            ret += '_'*50 + '\n'
             if 'NEXT' in row:
                 for nextname in row['NEXT']:
                     ret += self.roll_traverse_table(nextname)
         else:
-            ret += f'oi mate, cound not find a table called "{table_name}"\n'
+            ret += f'no table called "{table_name}"\n'
         return ret
 
     def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
