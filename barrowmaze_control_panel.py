@@ -9,8 +9,13 @@ import codecs
 
 # pylint: disable=missing-class-docstring,missing-function-docstring,missing-module-docstring
 
+SPOILERSAFE = True
+
 def rot13(text: str) -> str:
-    return codecs.encode(text, 'rot13')
+    if SPOILERSAFE:
+        return codecs.encode(text, 'rot13')
+    else:
+        return text
 
 def parse_roll(formula: str) -> T.Optional[int]:
     scalar_match = re.fullmatch(r'([0-9]+)', formula)
@@ -64,7 +69,7 @@ class ControlPanel:
         self.root.wm_title('Barrowmaze Control Panel')
 
         self.tables: T.Dict[Table] = dict()
-        self.tablepath = Path('./tables/rot13')
+        self.tablepath = Path('./tables/rot13' if SPOILERSAFE else './tables')
         for path in self.tablepath.glob('*.csv'):
             self.tables[path.stem] = Table(str(path))
 
