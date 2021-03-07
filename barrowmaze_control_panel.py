@@ -55,12 +55,21 @@ class ControlPanel:
         self.root = tk.Tk()
         self.root.geometry('450x400')
         self.root.wm_title('Barrowmaze Control Panel')
+        
+        self.control_frame = tk.Frame(self.root, relief=tk.RAISED, borderwidth=1)
+        self.control_frame.pack(padx=5, pady=5, ipadx=2, fill=tk.X)
 
-        self.player_level = tk.Spinbox(from_=1, to=10)
-        self.player_level.pack()
+        self.player_level_label = tk.Label(self.control_frame, text='Party Level')
+        self.player_level_label.pack(side=tk.LEFT)
+        self.player_level = tk.Spinbox(self.control_frame, from_=1, to=10, width=4)
+        self.player_level.pack(side=tk.LEFT)
 
-        self.generate_btn = tk.Button(self.root, text='Restock room', command=self.restock_room)
-        self.generate_btn.pack()
+        self.generate_btn = tk.Button(
+            self.control_frame,
+            text='Restock room',
+            command=self.restock_room
+        )
+        self.generate_btn.pack(side=tk.RIGHT)
 
         self.output = tk.Label(self.root, text='hejmax')
         self.output.pack()
