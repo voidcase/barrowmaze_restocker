@@ -12,6 +12,18 @@ import codecs
 def rot13(text: str) -> str:
     return codecs.encode(text, 'rot13')
 
+def parse_roll(formula: str) -> T.Optional[int]:
+    scalar_match = re.fullmatch(r'([0-9]+)', formula)
+    if scalar_match:
+        return int(scalar_match.group(0))
+    roll_match = re.match(r'([0-9]+)d([0-9]+)([+-][0-9]+)?', formula)
+    if roll_match is not None:
+        dice_count = int(roll_match.group(1))
+        dice_type = int(roll_match.group(2))
+        modifier = int(roll_match.group(3) or '0')
+        return sum([random.randint(1, dice_type) for i in range(dice_count)]) + modifier
+    return None
+
 
 class Table:
 
@@ -47,20 +59,19 @@ class Table:
 class ControlPanel:
 
     def __init__(self):
+        self.root = tk.Tk()
+        self.root.geometry('400x300')
+        self.root.wm_title('Barrowmaze Control Panel')
+
         self.tables: T.Dict[Table] = dict()
         self.tablepath = Path('./tables/rot13')
         for path in self.tablepath.glob('*.csv'):
             self.tables[path.stem] = Table(str(path))
 
-        self.root = tk.Tk()
-        self.root.geometry('400x300')
-        self.root.wm_title('Barrowmaze Control Panel')
-        
         self.control_frame = tk.Frame(self.root, relief=tk.RAISED, borderwidth=1, padx=2, pady=2)
         self.control_frame.pack(padx=5, pady=5, ipadx=2, fill=tk.X)
 
-        self.player_level_label = tk.Label(self.control_frame, text='Party Level')
-        self.player_level_label.pack(side=tk.LEFT)
+        tk.Label(self.control_frame, text='Party Level').pack(side=tk.LEFT)
         self.player_level = tk.Spinbox(self.control_frame, from_=1, to=10, width=4)
         self.player_level.pack(side=tk.LEFT)
 
@@ -97,10 +108,14 @@ class ControlPanel:
             row = table.roll()
             ret += '{}: {}\n'.format(table_name, row['NAME'])
             if 'AMOUNT' in row:
-                ret += 'AMOUNT: {}\n'.format(row['AMOUNT'])
+                amount = parse_roll(rot13(row['AMOUNT']))
+                ret += 'amount: {}\n'.format(amount or row['AMOUNT'])
             if 'HP' in row:
-                ret += 'HP: {}\n'.format(row['HP'])
-            ret += '_'*50 + '\n'
+                ret += 'hp roll: {}\n'.format(row['HP'])
+                if amount is not None and parse_roll(rot13(row['HP'])) is not None:
+                    hps = [str(parse_roll(rot13(row['HP']))) or '| Weird error, ask Isak |' for i in range(amount)]
+                    ret += 'hitpoints: {}\n'.format(', '.join(hps))
+            ret += '_'*80 + '\n'
             if 'NEXT' in row:
                 for nextname in row['NEXT']:
                     ret += self.roll_traverse_table(nextname)
