@@ -3,19 +3,18 @@ import random
 import re
 import typing as T
 from pathlib import Path
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
 import codecs
+from argparse import ArgumentParser
+import tkinter as tk
+from tkinter import messagebox
 
 # pylint: disable=missing-class-docstring,missing-function-docstring,missing-module-docstring
 
-SPOILERSAFE = False
+def get_args():
+    parser = ArgumentParser('barrowmaze_control_panel')
+    parser.add_argument('--spoiler-safe', action='store_true')
+    return parser.parse_args()
 
-def rot13(text: str) -> str:
-    if SPOILERSAFE:
-        return codecs.encode(text, 'rot13')
-    else:
-        return text
 
 def parse_roll(formula: str) -> T.Optional[int]:
     scalar_match = re.fullmatch(r'([0-9]+)', formula)
@@ -32,10 +31,11 @@ def parse_roll(formula: str) -> T.Optional[int]:
 
 class Table:
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, spoiler_safe=False):
         self.path = path
+        self.spoiler_safe = spoiler_safe
         content = list(csv.reader(open(path, 'r'), delimiter=';'))
-        self.headers = [rot13(h) for h in content[0]]
+        self.headers = [self.rot13(h) for h in content[0]]
         self.rows: T.List[T.Dict[str, str]] = [
             self.prepare_row(dict(zip(self.headers, row)))
             for row in content[1:]
@@ -46,8 +46,10 @@ class Table:
         for key in row:
             if row[key] == '':
                 del dst[key]
+            if key in ['HP', 'AMOUNT'] and key in dst:
+                dst[key] = self.rot13(dst[key])
             if key == 'NEXT' and 'NEXT' in dst:
-                dst[key] = [rot13(tn) for tn in dst[key].split(' ')]
+                dst[key] = [self.rot13(tn) for tn in dst[key].split(' ')]
         return dst
 
     def is_monster_table(self) -> bool:
@@ -60,18 +62,23 @@ class Table:
         idx = random.randint(0, len(self.rows)-1)
         return self.rows[idx]
 
+    def rot13(self, text: str) -> str:
+        return codecs.encode(text, 'rot13') if self.spoiler_safe else text
+
 
 class ControlPanel:
 
-    def __init__(self):
+    def __init__(self, spoiler_safe):
         self.root = tk.Tk()
         self.root.geometry('400x300')
         self.root.wm_title('Barrowmaze Control Panel')
 
+        self.spoiler_safe = spoiler_safe
+
         self.tables: T.Dict[Table] = dict()
-        self.tablepath = Path('./tables/rot13' if SPOILERSAFE else './tables')
+        self.tablepath = Path('./tables/rot13' if self.spoiler_safe else './tables')
         for path in self.tablepath.glob('*.csv'):
-            self.tables[path.stem] = Table(str(path))
+            self.tables[path.stem] = Table(str(path), spoiler_safe=self.spoiler_safe)
 
         self.control_frame = tk.Frame(self.root, relief=tk.RAISED, borderwidth=1, padx=2, pady=2)
         self.control_frame.pack(padx=5, pady=5, ipadx=2, fill=tk.X)
@@ -89,7 +96,7 @@ class ControlPanel:
 
         self.output = tk.Label(
             self.root,
-            text='hejmax',
+            text='While the adventureres are away the skellies will play...',
             justify=tk.LEFT,
             relief=tk.SUNKEN,
             anchor=tk.NW,
@@ -114,13 +121,16 @@ class ControlPanel:
             ret += '{}: {}\n'.format(table_name, row['NAME'])
             amount = None
             if 'AMOUNT' in row:
-                amount = parse_roll(rot13(row['AMOUNT']))
+                amount = parse_roll(row['AMOUNT'])
                 ret += 'amount: {}\n'.format(amount or row['AMOUNT'])
             if 'HP' in row:
                 amount = amount or 1
                 ret += 'hp roll: {}\n'.format(row['HP'])
-                if amount is not None and parse_roll(rot13(row['HP'])) is not None:
-                    hps = [str(parse_roll(rot13(row['HP']))) or '| Weird error, ask Isak |' for i in range(amount)]
+                if amount is not None and parse_roll(row['HP']) is not None:
+                    hps = [
+                        str(parse_roll(row['HP'])) or '| Weird error, ask Isak |'
+                        for i in range(amount)
+                    ]
                     ret += 'hitpoints: {}\n'.format(', '.join(hps))
             ret += '_'*80 + '\n'
             if 'NEXT' in row:
@@ -151,5 +161,6 @@ class ControlPanel:
 
 
 if __name__ == '__main__':
-    app = ControlPanel()
+    args = get_args()
+    app = ControlPanel(spoiler_safe=args.spoiler_safe)
     app.run()
