@@ -9,7 +9,7 @@ import codecs
 
 # pylint: disable=missing-class-docstring,missing-function-docstring,missing-module-docstring
 
-SPOILERSAFE = True
+SPOILERSAFE = False
 
 def rot13(text: str) -> str:
     if SPOILERSAFE:
