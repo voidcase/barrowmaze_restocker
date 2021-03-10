@@ -51,10 +51,12 @@ class Table:
         for key in row:
             if dst[key] == '':
                 del dst[key]
-            if key in ['HP', 'AMOUNT', 'NEXT'] and key in dst:
+        for key in dst:
+            if key in ['HP', 'AMOUNT', 'NEXT'] or not self.spoiler_safe:
+                # decipher non-spoiler-sensitive fields
                 dst[key] = self.rot13(dst[key])
-            if key == 'NEXT' and 'NEXT' in dst:
-                dst[key] = [tn for tn in dst[key].split(' ')]
+            if key == 'NEXT':
+                dst[key] = dst[key].split(' ')
         return dst
 
     def is_monster_table(self) -> bool:
@@ -68,7 +70,7 @@ class Table:
         return self.rows[idx]
 
     def rot13(self, text: str) -> str:
-        return codecs.encode(text, 'rot13') if self.spoiler_safe else text
+        return codecs.encode(text, 'rot13')
 
 
 class ControlPanel:
@@ -142,7 +144,9 @@ class ControlPanel:
                 for nextname in row['NEXT']:
                     ret += self.roll_traverse_table(nextname)
         else:
-            ret += f'no table called "{table_name}"\n'
+            error_msg = f'no table called "{table_name}".'
+            print(error_msg)
+            ret += error_msg + '\n'
         return ret
 
     def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
