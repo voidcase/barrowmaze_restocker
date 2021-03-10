@@ -12,7 +12,12 @@ from tkinter import messagebox
 
 def get_args():
     parser = ArgumentParser('barrowmaze_control_panel')
-    parser.add_argument('--spoiler-safe', action='store_true')
+    parser.add_argument(
+        '--spoiler-safe',
+        '-s',
+        action='store_true',
+        help='all text from tables is in rot13'
+    )
     return parser.parse_args()
 
 
@@ -44,12 +49,12 @@ class Table:
     def prepare_row(self, row: dict) -> dict:
         dst = row.copy()
         for key in row:
-            if row[key] == '':
+            if dst[key] == '':
                 del dst[key]
-            if key in ['HP', 'AMOUNT'] and key in dst:
+            if key in ['HP', 'AMOUNT', 'NEXT'] and key in dst:
                 dst[key] = self.rot13(dst[key])
             if key == 'NEXT' and 'NEXT' in dst:
-                dst[key] = [self.rot13(tn) for tn in dst[key].split(' ')]
+                dst[key] = [tn for tn in dst[key].split(' ')]
         return dst
 
     def is_monster_table(self) -> bool:
@@ -76,7 +81,7 @@ class ControlPanel:
         self.spoiler_safe = spoiler_safe
 
         self.tables: T.Dict[Table] = dict()
-        self.tablepath = Path('./tables/rot13' if self.spoiler_safe else './tables')
+        self.tablepath = Path('./tables')
         for path in self.tablepath.glob('*.csv'):
             self.tables[path.stem] = Table(str(path), spoiler_safe=self.spoiler_safe)
 
