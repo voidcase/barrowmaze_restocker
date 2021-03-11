@@ -26,19 +26,18 @@ def rot13(text: str) -> str:
 
 class Restocker():
 
-    def __init__(self, table_dir, spoiler_safe=False, party_level=1):
+    def __init__(self, table_dir, spoiler_safe=False):
         self.tables: T.Dict[Table] = dict()
         self.tablepath = Path(table_dir)
-        self.party_level = party_level
         self.spoiler_safe = spoiler_safe
         for path in self.tablepath.glob('*.csv'):
             self.tables[path.stem] = Table(str(path), spoiler_safe=self.spoiler_safe)
 
-    def roll_traverse_table(self, table_name='base'):
+    def roll_traverse_table(self, table_name='base', party_level=None):
         ret = ''
         if '_lvl' in table_name:
             table_name = table_name.replace('_lvl', '_{}'.format(
-                self.get_level_interval(['1-3', '4-6', '7-10'])
+                self.get_level_interval(party_level, ['1-3', '4-6', '7-10'])
             ))
         if table_name in self.tables:
             table: Table = self.tables[table_name]
@@ -60,15 +59,14 @@ class Restocker():
             ret += '_'*80 + '\n'
             if 'NEXT' in row:
                 for nextname in row['NEXT']:
-                    ret += self.roll_traverse_table(nextname)
+                    ret += self.roll_traverse_table(nextname, party_level=party_level)
         else:
             error_msg = f'no table called "{table_name}".'
             print(error_msg)
             ret += error_msg + '\n'
         return ret
 
-    def get_level_interval(self, intervals: T.List[str]) -> T.Optional[str]:
-        lvl = self.party_level
+    def get_level_interval(self, lvl, intervals: T.List[str]) -> T.Optional[str]:
         for interval in intervals:
             match = re.match(r'([0-9]+)-([0-9]+)', interval)
             if match is None:

@@ -50,9 +50,11 @@ class ControlPanel:
         self.output.pack(fill=tk.BOTH, expand=True, padx=5, pady=5, ipadx=5, ipady=5)
 
     def restock_room(self):
-        self.restocker.party_level = int(self.party_level.get())
         try:
-            text = self.restocker.roll_traverse_table('base')
+            text = self.restocker.roll_traverse_table(
+                'base',
+                party_level=int(self.party_level.get())
+            )
             self.output.configure(text=text)
         except RuntimeError as err:
             messagebox.showerror('error', err)
