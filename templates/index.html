@@ -1,0 +1,44 @@
+<html>
+	<head>
+		<meta charset='UTF-8'/>
+		<title>Barrowmaze Restocker</title>
+	</head>
+	<body>
+		<div class='container'>
+			<h3>Barrowmaze Restocker</h3>
+			<button id='restock_btn' onClick='restock()'>restock</button>
+			<pre id='output'>When the party's away, the skellies will play...</pre>
+		</div>
+	</body>
+<script type='text/javascript'>
+const btn = document.getElementById('restock_btn');
+const output = document.getElementById('output');
+const restock = function() {
+	output.innerHTML = ''
+	const req = new XMLHttpRequest();
+	req.open('GET', '/restock', true);
+	req.onload = (e) => {
+		const res = req.responseText;
+		output.innerHTML = res;
+	};
+	req.onerror = (e) => {
+		output.innerHTML = 'Server is not responding :(' + xhr.statusText;
+	};
+	req.send(null);
+}
+</script>
+<style>
+.container {
+	max-width: 600px;
+	margin: auto;
+	margin-top:30px;
+}
+#restock_btn {
+	background-color: black;
+	color: white;
+	padding: 20px;
+	margin: auto;
+	border-style: none;
+}
+</style>
+</html>
