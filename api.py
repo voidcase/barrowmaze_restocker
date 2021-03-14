@@ -1,5 +1,5 @@
 import flask
-from flask import request, Response, render_template
+from flask import request, Response, render_template, send_from_directory
 from restocker import Restocker
 import math
 import os
@@ -7,6 +7,7 @@ import os
 
 
 api = flask.Flask(__name__)
+api.static_folder = './static'
 try:
     spoiler_safe = bool(int(os.environ.get('BARROWMAZE_SPOILER_SAFE', default=1)))
 except ValueError:
@@ -29,6 +30,11 @@ def restock():
 @api.route('/')
 def ui():
     return render_template('index.html')
+
+@api.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(api.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
     api.run('0.0.0.0', debug=True)
