@@ -8,29 +8,42 @@
 			<h3>Barrowmaze Restocker</h3>
 			<label>Party Level:</label><input class="input" type="number" id="party-level" value="1" min="1" max="10"></input>
 			<button id='restock-btn' class="input" onClick='restock()'>restock</button>
-			<pre id='output'>When the party's away, the skellies will play...</pre>
+			<div id='output'>
+				<pre>When the party's away, the skellies will play...</pre>
+			</div>
 		</div>
 	</body>
 <script type='text/javascript'>
 const btn = document.getElementById('restock-btn');
 const output = document.getElementById('output');
 const partyLevel = document.getElementById('party-level');
+const addOutput = function(text) {
+	let msg = document.createElement('pre');
+	msg.textContent = text;
+	output.prepend(msg);
+}
 const restock = function() {
-	output.innerHTML = ''
 	const req = new XMLHttpRequest();
 	const lvl = parseInt(partyLevel.value);
 	req.open('GET', `/restock?lvl=${lvl}`, true);
 	req.onload = (e) => {
 		const res = req.responseText;
-		output.innerHTML = res;
+		addOutput(res)
 	};
 	req.onerror = (e) => {
-		output.innerHTML = 'Server is not responding :(' + xhr.statusText;
+		addOutput('Server is not responding :(' + xhr.statusText);
 	};
 	req.send(null);
 }
 </script>
 <style>
+pre {
+	border-width: 1;
+	border-color: black;
+	border-style: solid;
+	padding: 10px;
+}
+
 .container {
 	max-width: 600px;
 	margin: auto;
